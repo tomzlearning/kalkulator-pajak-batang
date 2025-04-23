@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Pajak Kendaraan UPPD BATANG</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border 0.3s;
+        }
+        input[type="text"]:focus, input[type="number"]:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            width: 100%;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            display: none;
+        }
+        .result h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .result-total {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #e74c3c;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #ccc;
+        }
+        .note {
+            font-size: 0.8em;
+            color: #7f8c8d;
+            margin-top: 30px;
+            text-align: center;
+        }
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Kalkulator Pajak Kendaraan</h1>
+        <p class="subtitle">UPPD KABUPATEN BATANG</p>
+        
+        <div class="form-group">
+            <label for="pkb">PKB Tahun Ini (Rp):</label>
+            <input type="text" id="pkb" placeholder="Contoh: 1.500.000" inputmode="numeric">
+        </div>
+        
+        <div class="form-group">
+            <label for="tahunBerlakuSTNK">Tahun Berlaku STNK:</label>
+            <input type="number" id="tahunBerlakuSTNK" placeholder="Contoh: 2023" min="1990">
+        </div>
+        
+        <div class="form-group">
+            <label for="jasaRaharja">Jasa Raharja (Rp):</label>
+            <input type="text" id="jasaRaharja" placeholder="Contoh: 35.000" inputmode="numeric">
+        </div>
+        
+        <button onclick="hitungPajak()" id="hitungButton">Hitung Pajak</button>
+        
+        <div id="result" class="result">
+            <h3>Rincian Pembayaran</h3>
+            
+            <div class="result-item">
+                <span>PKB Tahun Ini:</span>
+                <span id="showPkb">Rp0</span>
+            </div>
+            
+            <div class="result-item">
+                <span>Opsen (66% PKB):</span>
+                <span id="showOpsen">Rp0</span>
+            </div>
+            
+            <div class="result-item">
+                <span>Tunggakan Jasa Raharja (<span id="showTahunTunggakan">0</span> tahun):</span>
+                <span id="showTunggakan">Rp0</span>
+            </div>
+            
+            <div class="result-item">
+                <span>Jasa Raharja Tahun Ini:</span>
+                <span id="showJasaRaharja">Rp0</span>
+            </div>
+            
+            <div class="result-total">
+                <span>Total Bayar:</span>
+                <span id="total">Rp0</span>
+            </div>
+        </div>
+        
+        <p class="note">
+            Catatan: Perhitungan ini berlaku untuk program pemutihan pajak Jawa Tengah.<br>
+            PKB tahun sebelumnya dihapus, hanya membayar PKB tahun berjalan + opsen.
+        </p>
+    </div>
+
+    <script>
+        // Daftar input fields dalam urutan tab
+        const inputFields = [
+            document.getElementById('pkb'),
+            document.getElementById('tahunBerlakuSTNK'),
+            document.getElementById('jasaRaharja')
+        ];
+
+        // Fungsi untuk memformat input Rupiah saat diketik
+        function formatInputRupiah(inputElement) {
+            // Simpan state awal
+            const [start, end] = [inputElement.selectionStart, inputElement.selectionEnd];
+            const originalValue = inputElement.value;
+            
+            // Format nilai
+            const num = originalValue.replace(/[^\d]/g, '');
+            const formatted = new Intl.NumberFormat('id-ID').format(num);
+            
+            // Update nilai
+            inputElement.value = formatted;
+            
+            // Kalkulasi posisi kursor baru
+            let newCursorPos;
+            if (start === end && start === originalValue.length) {
+                // Kursor di akhir: tetap di akhir
+                newCursorPos = formatted.length;
+            } else {
+                // Hitung posisi relatif terhadap digit (bukan karakter titik)
+                const leftOfCursor = originalValue.substring(0, start).replace(/[^\d]/g, '');
+                newCursorPos = formatted.length;
+                let digitCount = 0;
+                for (let i = 0; i < formatted.length; i++) {
+                    if (/\d/.test(formatted[i])) digitCount++;
+                    if (digitCount === leftOfCursor.length) {
+                        newCursorPos = i + 1;
+                        break;
+                    }
+                }
+            }
+            
+            inputElement.setSelectionRange(newCursorPos, newCursorPos);
+        }
+
+        // Fungsi untuk mengkonversi format Rupiah ke angka
+        function parseRupiah(rupiahString) {
+            return parseInt(rupiahString.replace(/[^\d]/g, '')) || 0;
+        }
+
+        // Pasang event listener untuk auto-formatting
+        document.getElementById('pkb').addEventListener('input', function() {
+            formatInputRupiah(this);
+        });
+
+        document.getElementById('jasaRaharja').addEventListener('input', function() {
+            formatInputRupiah(this);
+        });
+
+        // Handle Enter key untuk navigasi field
+        inputFields.forEach((field, index) => {
+            field.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    
+                    if (index < inputFields.length - 1) {
+                        // Pindah ke field berikutnya
+                        inputFields[index + 1].focus();
+                    } else {
+                        // Jika di field terakhir, hitung pajak
+                        document.getElementById('hitungButton').click();
+                    }
+                }
+            });
+        });
+
+        function hitungPajak() {
+            // Ambil input yang sudah diformat dan konversi ke angka
+            const pkb = parseRupiah(document.getElementById("pkb").value);
+            const tahunBerlakuSTNK = parseInt(document.getElementById("tahunBerlakuSTNK").value);
+            const jasaRaharja = parseRupiah(document.getElementById("jasaRaharja").value);
+            const tahunSekarang = new Date().getFullYear();
+
+            // Validasi
+            if (isNaN(pkb) || isNaN(tahunBerlakuSTNK) || isNaN(jasaRaharja)) {
+                alert("Harap isi semua field dengan benar!");
+                return;
+            }
+            if (tahunBerlakuSTNK > tahunSekarang) {
+                alert("Tahun berlaku STNK tidak boleh lebih besar dari tahun sekarang!");
+                return;
+            }
+
+            // Hitung tunggakan
+            const selisihTahun = tahunSekarang - tahunBerlakuSTNK;
+            const tunggakanTahun = selisihTahun > 0 ? selisihTahun : 0;
+            const totalTunggakan = tunggakanTahun * jasaRaharja;
+            const totalJR = totalTunggakan + jasaRaharja;
+
+            // Hitung total bayar (bulatkan ke bawah)
+            const opsen = Math.floor(0.66 * pkb);
+            const totalBayar = pkb + opsen + totalJR;
+
+            // Tampilkan hasil (tanpa desimal)
+            document.getElementById("showPkb").textContent = formatRupiah(pkb);
+            document.getElementById("showOpsen").textContent = formatRupiah(opsen);
+            document.getElementById("showTahunTunggakan").textContent = tunggakanTahun;
+            document.getElementById("showTunggakan").textContent = formatRupiah(totalTunggakan);
+            document.getElementById("showJasaRaharja").textContent = formatRupiah(jasaRaharja);
+            document.getElementById("total").textContent = formatRupiah(totalBayar);
+            document.getElementById("result").style.display = "block";
+        }
+
+        // Fungsi format Rupiah untuk output (tanpa desimal)
+        function formatRupiah(angka) {
+            return "Rp" + Math.floor(angka).toLocaleString("id-ID");
+        }
+    </script>
+</body>
+</html>
