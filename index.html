@@ -102,38 +102,9 @@
             margin-top: 30px;
             text-align: center;
         }
-        
-        /* Improved mobile layout */
         @media (max-width: 480px) {
             .container {
                 padding: 15px;
-            }
-            
-            .result-item {
-                flex-direction: column;
-            }
-            
-            .result-item span:first-child {
-                white-space: normal;
-                margin-bottom: 3px;
-                font-size: 0.95em;
-            }
-            
-            .result-item span:last-child {
-                align-self: flex-end;
-                font-size: 1em;
-            }
-            
-            /* Specific adjustment for the tunggakan item */
-            .tunggakan-item span:first-child {
-                display: flex;
-                flex-direction: column;
-                line-height: 1.4;
-            }
-            
-            .result-total {
-                flex-direction: row;
-                align-items: center;
             }
         }
     </style>
@@ -145,16 +116,16 @@
         
         <div class="form-group">
             <label for="pkb">PKB Tahun Ini :</label>
-            <input type="text" id="pkb" placeholder="Contoh: 150.000" inputmode="numeric">
+            <input type="text" id="pkb" placeholder="Contoh: 1.500.000" inputmode="numeric">
         </div>
         
         <div class="form-group">
             <label for="tahunBerlakuSTNK">Tahun Berlaku STNK:</label>
-            <input type="number" id="tahunBerlakuSTNK" placeholder="Contoh: 2024" min="1990">
+            <input type="number" id="tahunBerlakuSTNK" placeholder="Contoh: 2023" min="1990">
         </div>
         
         <div class="form-group">
-            <label for="jasaRaharja">Jasa Raharja :</label>
+            <label for="jasaRaharja">Jasa Raharja/SWDKLLJ :</label>
             <input type="text" id="jasaRaharja" placeholder="Contoh: 35.000" inputmode="numeric">
         </div>
         
@@ -169,11 +140,11 @@
             </div>
             
             <div class="result-item">
-                <span>Opsen :</span>
+                <span>Opsen PKB:</span>
                 <span id="showOpsen">Rp0</span>
             </div>
             
-            <div class="result-item tunggakan-item">
+            <div class="result-item">
                 <span>Tunggakan Jasa Raharja (<span id="showTahunTunggakan">0</span> tahun):</span>
                 <span id="showTunggakan">Rp0</span>
             </div>
@@ -191,7 +162,7 @@
         
         <p class="note">
             Catatan: Perhitungan ini berlaku untuk program pemutihan pajak Jawa Tengah.<br>
-            PKB tahun sebelumnya dihapus, hanya membayar PKB tahun berjalan,opsen dan tunggakan Jasa Raharja.
+            PKB tahun sebelumnya dihapus, hanya membayar PKB tahun berjalan + opsen.
         </p>
     </div>
 
