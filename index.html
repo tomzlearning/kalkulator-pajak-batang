@@ -102,9 +102,38 @@
             margin-top: 30px;
             text-align: center;
         }
+        
+        /* Improved mobile layout */
         @media (max-width: 480px) {
             .container {
                 padding: 15px;
+            }
+            
+            .result-item {
+                flex-direction: column;
+            }
+            
+            .result-item span:first-child {
+                white-space: normal;
+                margin-bottom: 3px;
+                font-size: 0.95em;
+            }
+            
+            .result-item span:last-child {
+                align-self: flex-end;
+                font-size: 1em;
+            }
+            
+            /* Specific adjustment for the tunggakan item */
+            .tunggakan-item span:first-child {
+                display: flex;
+                flex-direction: column;
+                line-height: 1.4;
+            }
+            
+            .result-total {
+                flex-direction: row;
+                align-items: center;
             }
         }
     </style>
@@ -125,7 +154,7 @@
         </div>
         
         <div class="form-group">
-            <label for="jasaRaharja">SWDKLLJ :</label>
+            <label for="jasaRaharja">Jasa Raharja :</label>
             <input type="text" id="jasaRaharja" placeholder="Contoh: 35.000" inputmode="numeric">
         </div>
         
@@ -144,7 +173,7 @@
                 <span id="showOpsen">Rp0</span>
             </div>
             
-            <div class="result-item">
+            <div class="result-item tunggakan-item">
                 <span>Tunggakan Jasa Raharja (<span id="showTahunTunggakan">0</span> tahun):</span>
                 <span id="showTunggakan">Rp0</span>
             </div>
