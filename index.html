@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KALKULATOR PAJAK KENDARAAN UPPD BATANG</title>
     <style>
-        /* CSS tetap sama seperti sebelumnya */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
@@ -42,7 +41,7 @@
             font-weight: 600;
             color: #2c3e50;
         }
-        input[type="text"], input[type="number"] {
+        input[type="text"], input[type="number"], select {
             width: 100%;
             padding: 12px;
             border: 1px solid #ddd;
@@ -51,9 +50,23 @@
             box-sizing: border-box;
             transition: border 0.3s;
         }
-        input[type="text"]:focus, input[type="number"]:focus {
+        input[type="text"]:focus, input[type="number"]:focus, select:focus {
             border-color: #3498db;
             outline: none;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 10px;
+            width: auto;
+        }
+        .additional-option {
+            margin-left: 25px;
+            margin-top: 10px;
+            display: none;
         }
         button {
             background-color: #3498db;
@@ -66,6 +79,7 @@
             cursor: pointer;
             transition: background-color 0.3s;
             font-weight: bold;
+            margin-top: 10px;
         }
         button:hover {
             background-color: #2980b9;
@@ -122,12 +136,34 @@
         
         <div class="form-group">
             <label for="tahunBerlakuSTNK">Tahun Berlaku STNK :</label>
-            <input type="text" id="tahunBerlakuSTNK" placeholder="Contoh: 2024" inputmode="numeric">
+            <select id="tahunBerlakuSTNK">
+                <!-- Tahun akan diisi oleh JavaScript -->
+            </select>
         </div>
         
         <div class="form-group">
             <label for="jasaRaharja">SWDKLLJ :</label>
             <input type="text" id="jasaRaharja" placeholder="Contoh: 35.000" inputmode="numeric">
+        </div>
+        
+        <div class="form-group">
+            <div class="checkbox-group">
+                <input type="checkbox" id="gantiPlat">
+                <label for="gantiPlat">Ganti Plat</label>
+            </div>
+            <div id="gantiPlatGroup" class="additional-option">
+                <select id="jenisKendaraan">
+                    <option value="motor">Motor (Rp160.000)</option>
+                    <option value="mobil">Mobil (Rp300.000)</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <div class="checkbox-group">
+                <input type="checkbox" id="balikNama">
+                <label for="balikNama">Balik Nama (Rp225.000)</label>
+            </div>
         </div>
         
         <button onclick="hitungPajak()" id="hitungButton">Hitung Pajak</button>
@@ -136,7 +172,7 @@
             <h3>Rincian Pembayaran</h3>
             
             <div class="result-item">
-                <span>PKB :</span>
+                <span>PKB Tahun Ini :</span>
                 <span id="showPkb">Rp0</span>
             </div>
             
@@ -146,8 +182,18 @@
             </div>
             
             <div class="result-item">
-                <span>Total SWDKLLJ (<span id="showTotalTahun">0</span> Tahun) :</span>
+                <span>Total SWDKLLJ (<span id="showTotalTahun">0</span> Tahun):</span>
                 <span id="showTotalSWDKLLJ">Rp0</span>
+            </div>
+            
+            <div id="gantiPlatResult" class="result-item" style="display:none;">
+                <span>Biaya Ganti Plat :</span>
+                <span id="showGantiPlat">Rp0</span>
+            </div>
+            
+            <div id="balikNamaResult" class="result-item" style="display:none;">
+                <span>Biaya Balik Nama :</span>
+                <span id="showBalikNama">Rp0</span>
             </div>
             
             <div class="result-total">
@@ -157,15 +203,28 @@
         </div>
         
         <p class="note">
-            Catatan: Perhitungan ini hanya perkiraan saja.
-            PKB tahun sebelumnya dihapus, hanya membayar PKB tahun berjalan,opsen dan tunggakan SWDKLLJ.
+            Catatan: Perhitungan ini berlaku untuk program pemutihan pajak Jawa Tengah 2025.
+            PKB tahun sebelumnya dihapus, hanya membayar PKB tahun berjalan, opsen dan tunggakan SWDKLLJ.
         </p>
     </div>
 
     <script>
+        // Inisialisasi dropdown tahun
+        const tahunSelect = document.getElementById('tahunBerlakuSTNK');
+        const currentYear = new Date().getFullYear();
+        const startYear = 1990;
+        
+        // Tambahkan tahun dari 2025 ke bawah
+        for (let year = currentYear; year >= startYear; year--) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            tahunSelect.appendChild(option);
+        }
+
+        // Format input Rupiah
         const inputFields = [
             document.getElementById('pkb'),
-            document.getElementById('tahunBerlakuSTNK'),
             document.getElementById('jasaRaharja')
         ];
 
@@ -201,6 +260,7 @@
             return parseInt(rupiahString.replace(/[^\d]/g, '')) || 0;
         }
 
+        // Event listeners untuk format Rupiah
         document.getElementById('pkb').addEventListener('input', function() {
             formatInputRupiah(this);
         });
@@ -209,6 +269,13 @@
             formatInputRupiah(this);
         });
 
+        // Toggle tampilan opsi ganti plat
+        document.getElementById('gantiPlat').addEventListener('change', function() {
+            document.getElementById('gantiPlatGroup').style.display = 
+                this.checked ? 'block' : 'none';
+        });
+
+        // Navigasi form dengan Enter
         inputFields.forEach((field, index) => {
             field.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
@@ -227,25 +294,50 @@
             const pkb = parseRupiah(document.getElementById("pkb").value);
             const tahunBerlakuSTNK = parseInt(document.getElementById("tahunBerlakuSTNK").value);
             const jasaRaharja = parseRupiah(document.getElementById("jasaRaharja").value);
-            const tahunSekarang = new Date().getFullYear();
+            const gantiPlat = document.getElementById("gantiPlat").checked;
+            const jenisKendaraan = document.getElementById("jenisKendaraan").value;
+            const balikNama = document.getElementById("balikNama").checked;
 
             if (isNaN(pkb) || isNaN(tahunBerlakuSTNK) || isNaN(jasaRaharja)) {
                 alert("Harap isi semua field dengan benar!");
                 return;
             }
-            if (tahunBerlakuSTNK > tahunSekarang) {
+            if (tahunBerlakuSTNK > currentYear) {
                 alert("Tahun berlaku STNK tidak boleh lebih besar dari tahun sekarang!");
                 return;
             }
 
-            const selisihTahun = tahunSekarang - tahunBerlakuSTNK;
+            // Hitung komponen dasar
+            const selisihTahun = currentYear - tahunBerlakuSTNK;
             const tunggakanTahun = selisihTahun > 0 ? selisihTahun : 0;
             const totalTahunSWDKLLJ = tunggakanTahun + 1;
             const totalSWDKLLJ = totalTahunSWDKLLJ * jasaRaharja;
-
             const opsen = Math.floor(0.66 * pkb);
-            const totalBayar = pkb + opsen + totalSWDKLLJ;
+            
+            let totalBayar = pkb + opsen + totalSWDKLLJ;
 
+            // Hitung biaya tambahan
+            let biayaGantiPlat = 0;
+            if (gantiPlat) {
+                biayaGantiPlat = (jenisKendaraan === 'motor') ? 160000 : 300000;
+                totalBayar += biayaGantiPlat;
+                document.getElementById("gantiPlatResult").style.display = "flex";
+                document.getElementById("showGantiPlat").textContent = formatRupiah(biayaGantiPlat);
+            } else {
+                document.getElementById("gantiPlatResult").style.display = "none";
+            }
+
+            let biayaBalikNama = 0;
+            if (balikNama) {
+                biayaBalikNama = 225000;
+                totalBayar += biayaBalikNama;
+                document.getElementById("balikNamaResult").style.display = "flex";
+                document.getElementById("showBalikNama").textContent = formatRupiah(biayaBalikNama);
+            } else {
+                document.getElementById("balikNamaResult").style.display = "none";
+            }
+
+            // Tampilkan hasil
             document.getElementById("showPkb").textContent = formatRupiah(pkb);
             document.getElementById("showOpsen").textContent = formatRupiah(opsen);
             document.getElementById("showTotalTahun").textContent = totalTahunSWDKLLJ;
